@@ -20,7 +20,7 @@ use tracing_subscriber::prelude::*;
 fn main() {
     tracing_subscriber::registry()
         // ... other layers
-        .with(tracing_samply::SamplyLayer::new())
+        .with(tracing_samply::SamplyLayer::new().unwrap())
         .init();
     
     // Your application code that uses `tracing`
