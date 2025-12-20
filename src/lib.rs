@@ -114,7 +114,7 @@ impl SamplyLayer {
                 .map_exec(&file)
                 .map_err(map_io_err("could not mmap perf markers file", path))?
         };
-        Ok(MarkerFile { file: BufWriter::new(file) })
+        Ok(MarkerFile::new(file))
     }
 }
 
@@ -147,13 +147,28 @@ where
         let end_ts = now_timestamp();
         MARKER_FILE.with_borrow_mut(|file| {
             let file = file.get_or_insert_with(|| self.create_marker_file());
-            let _ = writeln!(file.file, "{start_ts} {end_ts} {}", span.name());
+            file.write_entry(start_ts, end_ts, span.name());
         });
     }
 }
 
 struct MarkerFile {
     file: BufWriter<File>,
+}
+
+impl MarkerFile {
+    fn new(file: File) -> Self {
+        Self { file: BufWriter::new(file) }
+    }
+
+    fn write_entry(&mut self, start_ts: u64, end_ts: u64, name: &str) {
+        let _ = self.file.write_all(itoa::Buffer::new().format(start_ts).as_bytes());
+        let _ = self.file.write_all(b" ");
+        let _ = self.file.write_all(itoa::Buffer::new().format(end_ts).as_bytes());
+        let _ = self.file.write_all(b" ");
+        let _ = self.file.write_all(name.as_bytes());
+        let _ = self.file.write_all(b"\n");
+    }
 }
 
 fn now_timestamp() -> u64 {

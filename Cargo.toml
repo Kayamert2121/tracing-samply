@@ -12,6 +12,7 @@ categories = ["development-tools::profiling", "development-tools::debugging"]
 
 [dependencies]
 cfg-if = "1"
+itoa = "1.0.15"
 smallvec = { version = "1.15.1", default-features = false, features = ["union"] }
 tracing-core = { version = "0.1", default-features = false }
 tracing-subscriber = { version = "0.3.22", default-features = false, features = ["std"] }
