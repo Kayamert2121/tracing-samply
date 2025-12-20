@@ -11,6 +11,7 @@ keywords = ["tracing", "profiling", "perf", "samply", "instrumentation"]
 categories = ["development-tools::profiling", "development-tools::debugging", "asynchronous"]
 
 [dependencies]
+cfg-if = "1"
 tracing-core = { version = "0.1", default-features = false }
 tracing-subscriber = { version = "0.3.22", default-features = false, features = ["std"] }
 

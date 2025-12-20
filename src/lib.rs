@@ -96,31 +96,30 @@ where
 }
 
 fn now_timestamp() -> u64 {
-    #[cfg(unix)]
-    {
-        let mut ts = unsafe { std::mem::zeroed() };
-        if unsafe { libc::clock_gettime(libc::CLOCK_MONOTONIC, &mut ts) } != 0 {
-            return u64::MAX;
+    cfg_if::cfg_if! {
+        if #[cfg(unix)] {
+            let mut ts = unsafe { std::mem::zeroed() };
+            if unsafe { libc::clock_gettime(libc::CLOCK_MONOTONIC, &mut ts) } != 0 {
+                return u64::MAX;
+            }
+            std::time::Duration::new(ts.tv_sec as _, ts.tv_nsec as _)
+                .as_nanos()
+                .try_into()
+                .unwrap_or(u64::MAX)
+        } else {
+            0
         }
-        std::time::Duration::new(ts.tv_sec as _, ts.tv_nsec as _)
-            .as_nanos()
-            .try_into()
-            .unwrap_or(u64::MAX)
-    }
-    #[cfg(not(unix))]
-    {
-        0
     }
 }
 
 fn gettid() -> Option<i32> {
-    #[cfg(target_os = "linux")]
-    {
-        Some(unsafe { libc::gettid() })
-    }
-    #[cfg(not(target_os = "linux"))]
-    {
-        None
+    // TODO: macos
+    cfg_if::cfg_if! {
+        if #[cfg(target_os = "linux")] {
+            Some(unsafe { libc::gettid() })
+        } else {
+            None
+        }
     }
 }
 
