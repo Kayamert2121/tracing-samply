@@ -41,8 +41,6 @@ fn basic() {
         assert!(contents.contains("info_span\n"), "{contents:?}");
         assert!(!contents.contains("debug_span\n"), "{contents:?}");
         assert!(contents.ends_with("\n"), "{contents:?}");
-
-        let _ = std::io::Write::write_all(&mut std::io::stderr(), contents.as_bytes());
     }
     assert_eq!(count, 2);
 }
