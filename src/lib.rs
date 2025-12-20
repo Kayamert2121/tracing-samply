@@ -5,14 +5,14 @@ use smallvec::{SmallVec, smallvec};
 use std::{
     cell::RefCell,
     fs::{File, OpenOptions},
-    io::{self, Write},
+    io::{self, BufWriter, Write},
     path::{Path, PathBuf},
 };
 use tracing_core::{Subscriber, span};
 use tracing_subscriber::{Layer, layer::Context, registry::LookupSpan};
 
 thread_local! {
-    static MARKER_FILE: RefCell<Option<File>> = const { RefCell::new(None) };
+    static MARKER_FILE: RefCell<Option<MarkerFile>> = const { RefCell::new(None) };
 }
 
 /// [`SamplyLayer`] builder.
@@ -85,14 +85,14 @@ impl SamplyLayer {
         SamplyLayerBuilder::new()
     }
 
-    fn create_marker_file(&self) -> File {
+    fn create_marker_file(&self) -> MarkerFile {
         match self.try_create_marker_file() {
             Ok(file) => file,
             Err(err) => panic!("{err}"),
         }
     }
 
-    fn try_create_marker_file(&self) -> io::Result<File> {
+    fn try_create_marker_file(&self) -> io::Result<MarkerFile> {
         let pid = std::process::id();
         let fname = match gettid() {
             Some(tid) => format!("marker-{pid}-{tid}.txt"),
@@ -114,7 +114,7 @@ impl SamplyLayer {
                 .map_exec(&file)
                 .map_err(map_io_err("could not mmap perf markers file", path))?
         };
-        Ok(file)
+        Ok(MarkerFile { file: BufWriter::new(file) })
     }
 }
 
@@ -147,10 +147,13 @@ where
         let end_ts = now_timestamp();
         MARKER_FILE.with_borrow_mut(|file| {
             let file = file.get_or_insert_with(|| self.create_marker_file());
-            let line = format!("{start_ts} {end_ts} {}\n", span.name());
-            let _ = file.write_all(line.as_bytes());
+            let _ = writeln!(file.file, "{start_ts} {end_ts} {}", span.name());
         });
     }
+}
+
+struct MarkerFile {
+    file: BufWriter<File>,
 }
 
 fn now_timestamp() -> u64 {
@@ -210,4 +213,18 @@ fn gettid() -> Option<u64> {
 
 fn map_io_err(s: &str, p: &Path) -> impl FnOnce(io::Error) -> io::Error {
     move |e| io::Error::new(e.kind(), format!("{s} {p:?}: {e}"))
+}
+
+// Not public API. Only for testing purposes.
+#[doc(hidden)]
+pub mod __private {
+    use super::*;
+
+    pub fn flush_marker_file() {
+        MARKER_FILE.with_borrow_mut(|file| {
+            if let Some(file) = file {
+                let _ = file.file.flush();
+            }
+        });
+    }
 }

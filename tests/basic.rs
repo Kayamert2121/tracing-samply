@@ -16,8 +16,10 @@ fn basic() {
         .init();
 
     spanned(42);
+    tracing_samply::__private::flush_marker_file();
     std::thread::spawn(|| {
         spanned(43);
+        tracing_samply::__private::flush_marker_file();
     })
     .join()
     .unwrap();
