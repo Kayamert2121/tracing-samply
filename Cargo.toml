@@ -2,13 +2,18 @@
 name = "tracing-perf-markers"
 version = "0.1.0"
 edition = "2024"
-description = "Tracing subscriber for Linux `perf`-like markers"
+description = "Tracing subscriber for `perf` markers"
 rust-version = "1.88" # MSRV
 authors = ["DaniPopes <57450786+DaniPopes@users.noreply.github.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/DaniPopes/tracing-perf-markers"
-# keywords = ["fixed", "cache", "hash", "concurrent", "lock-free"]
-# categories = ["caching", "concurrency", "data-structures"]
+keywords = ["tracing", "profiling", "perf", "samply", "instrumentation"]
+categories = ["development-tools::profiling", "development-tools::debugging", "asynchronous"]
 
 [dependencies]
-tracing-subscriber = { version = "0.3.22", default-features = false }
+tracing-core = { version = "0.1", default-features = false }
+tracing-subscriber = { version = "0.3.22", default-features = false, features = ["std"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+memmap2 = "0.9.9"
