@@ -1,14 +1,14 @@
 [package]
-name = "tracing-perf-markers"
+name = "tracing-samply"
 version = "0.1.0"
 edition = "2024"
-description = "Tracing subscriber for `perf` markers"
+description = "Tracing subscriber layer for samply"
 rust-version = "1.88" # MSRV
 authors = ["DaniPopes <57450786+DaniPopes@users.noreply.github.com>"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/DaniPopes/tracing-perf-markers"
+repository = "https://github.com/DaniPopes/tracing-samply"
 keywords = ["tracing", "profiling", "perf", "samply", "instrumentation"]
-categories = ["development-tools::profiling", "development-tools::debugging", "asynchronous"]
+categories = ["development-tools::profiling", "development-tools::debugging"]
 
 [dependencies]
 cfg-if = "1"

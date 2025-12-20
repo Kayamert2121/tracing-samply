@@ -5,7 +5,7 @@ use std::{
     cell::RefCell,
     fs::{File, OpenOptions},
     io::{self, Write},
-    path::Path,
+    path::{Path, PathBuf},
 };
 use tracing_core::{Subscriber, span};
 use tracing_subscriber::{Layer, layer::Context, registry::LookupSpan};
@@ -14,10 +14,51 @@ thread_local! {
     static MARKER_FILE: RefCell<Option<File>> = const { RefCell::new(None) };
 }
 
-/// A tracing layer that records span timings to a file.
+/// [`SamplyLayer`] builder.
 ///
-/// See the [crate docs](self) for more information.
-pub struct PerfMarkersLayer {
+/// See the [crate docs](crate) for more information.
+pub struct SamplyLayerBuilder {
+    output_dir: Option<Box<Path>>,
+}
+
+impl Default for SamplyLayerBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl SamplyLayerBuilder {
+    /// Creates a new [`SamplyLayerBuilder`].
+    pub fn new() -> Self {
+        Self { output_dir: None }
+    }
+
+    /// Sets the output directory for intermediate files.
+    ///
+    /// If unset, a temporary directory will be created and used.
+    pub fn output_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.output_dir = Some(dir.into().into());
+        self
+    }
+
+    /// Builds a new [`SamplyLayer`].
+    pub fn build(self) -> io::Result<SamplyLayer> {
+        let Self { output_dir } = self;
+        let dir = match &output_dir {
+            Some(dir) => dir,
+            None => &*std::env::temp_dir().join("tracing-samply"),
+        };
+        let dir = dir.join(std::process::id().to_string());
+        std::fs::create_dir_all(&dir)
+            .map_err(map_io_err("could not create perf markers dir", &dir))?;
+        Ok(SamplyLayer { dir: dir.into_boxed_path() })
+    }
+}
+
+/// A tracing layer that bridges `tracing` events and spans with `samply`.
+///
+/// See the [crate docs](crate) for more information.
+pub struct SamplyLayer {
     dir: Box<Path>,
 }
 
@@ -25,21 +66,17 @@ struct SpanData {
     start_ns: u64,
 }
 
-impl PerfMarkersLayer {
-    /// Creates a new layer and guard, writing to the given file path.
+impl SamplyLayer {
+    /// Creates a new [`SamplyLayer`].
     ///
-    /// `dir` will contain all the marker files.
-    /// If `None`, a temporary directory will be created.
-    pub fn new(dir: Option<&Path>) -> io::Result<Self> {
-        let dir = match dir {
-            Some(dir) => dir.to_path_buf(),
-            None => std::env::temp_dir().join("tracing-perf-markers"),
-        }
-        .join(std::process::id().to_string());
-        std::fs::create_dir_all(&dir)
-            .map_err(map_io_err("could not create perf markers dir", &dir))?;
+    /// This is the same as `SamplyLayer::builder().build()`.
+    pub fn new() -> io::Result<Self> {
+        Self::builder().build()
+    }
 
-        Ok(Self { dir: dir.into_boxed_path() })
+    /// Creates a new [`SamplyLayer`] builder.
+    pub fn builder() -> SamplyLayerBuilder {
+        SamplyLayerBuilder::new()
     }
 
     fn create_marker_file(&self) -> File {
@@ -62,7 +99,7 @@ impl PerfMarkersLayer {
             .write(true)
             .open(path)
             .map_err(map_io_err("could not create perf markers file", path))?;
-        // mmap the file to notify samply/perf.
+        // mmap the file to notify samply.
         #[cfg(unix)]
         let _ = unsafe {
             memmap2::MmapOptions::new()
@@ -73,7 +110,7 @@ impl PerfMarkersLayer {
     }
 }
 
-impl<S> Layer<S> for PerfMarkersLayer
+impl<S> Layer<S> for SamplyLayer
 where
     S: Subscriber + for<'a> LookupSpan<'a>,
 {
@@ -113,10 +150,12 @@ fn now_timestamp() -> u64 {
 }
 
 fn gettid() -> Option<i32> {
-    // TODO: macos
     cfg_if::cfg_if! {
         if #[cfg(target_os = "linux")] {
             Some(unsafe { libc::gettid() })
+        } else if #[cfg(target_vendor = "apple")] {
+            // TODO
+            None
         } else {
             None
         }
