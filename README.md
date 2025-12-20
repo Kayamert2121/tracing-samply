@@ -12,6 +12,10 @@ The creator has expressed that the marker file is a temporary measure and that i
 
 See also: [mstange/samply#349](https://github.com/mstange/samply/issues/349)
 
+### [Example Profile](https://share.firefox.dev/4jgig5C)
+
+![samply](assets/sample.png)
+
 ## Usage
 
 ```rust
