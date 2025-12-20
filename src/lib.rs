@@ -100,10 +100,11 @@ impl SamplyLayer {
             .open(path)
             .map_err(map_io_err("could not create perf markers file", path))?;
         // mmap the file to notify samply.
+        // perf needs `exec` permission to record it in perf.data.
         #[cfg(unix)]
         let _ = unsafe {
             memmap2::MmapOptions::new()
-                .map(&file)
+                .map_exec(&file)
                 .map_err(map_io_err("could not mmap perf markers file", path))?
         };
         Ok(file)
