@@ -14,7 +14,7 @@ See also: [mstange/samply#349](https://github.com/mstange/samply/issues/349)
 
 ### [Example Profile](https://share.firefox.dev/4jgig5C)
 
-![samply](assets/sample.png)
+![samply](https://raw.githubusercontent.com/DaniPopes/tracing-samply/refs/heads/main/assets/sample.png)
 
 ## Usage
 
