@@ -1,6 +1,6 @@
 [package]
 name = "tracing-samply"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2024"
 description = "Tracing subscriber layer for samply"
 rust-version = "1.88" # MSRV
