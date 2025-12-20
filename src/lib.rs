@@ -1,6 +1,7 @@
 #![doc = include_str!("../README.md")]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
+use smallvec::{SmallVec, smallvec};
 use std::{
     cell::RefCell,
     fs::{File, OpenOptions},
@@ -64,8 +65,11 @@ pub struct SamplyLayer {
     dir: Box<Path>,
 }
 
+struct SpanDataStack {
+    stack: SmallVec<[SpanData; 1]>,
+}
 struct SpanData {
-    start_ns: u64,
+    start_ts: u64,
 }
 
 impl SamplyLayer {
@@ -123,8 +127,13 @@ where
             return;
         }
         let Some(span) = ctx.span(id) else { return };
-        let start_ns = now_timestamp();
-        span.extensions_mut().insert(SpanData { start_ns });
+        let data = SpanData { start_ts: now_timestamp() };
+        let mut extensions = span.extensions_mut();
+        if let Some(stack) = extensions.get_mut::<SpanDataStack>() {
+            stack.stack.push(data);
+        } else {
+            extensions.insert(SpanDataStack { stack: smallvec![data] });
+        }
     }
 
     fn on_exit(&self, id: &span::Id, ctx: Context<'_, S>) {
@@ -132,12 +141,14 @@ where
             return;
         }
         let Some(span) = ctx.span(id) else { return };
-        let extensions = span.extensions();
-        let Some(data) = extensions.get::<SpanData>() else { return };
-        let end_ns = now_timestamp();
-        let line = format!("{} {} {}\n", data.start_ns, end_ns, span.name());
-        let _ = MARKER_FILE.with_borrow_mut(|file| {
-            file.get_or_insert_with(|| self.create_marker_file()).write_all(line.as_bytes())
+        let mut extensions = span.extensions_mut();
+        let Some(data) = extensions.get_mut::<SpanDataStack>() else { return };
+        let Some(SpanData { start_ts }) = data.stack.pop() else { return };
+        let end_ts = now_timestamp();
+        MARKER_FILE.with_borrow_mut(|file| {
+            let file = file.get_or_insert_with(|| self.create_marker_file());
+            let line = format!("{start_ts} {end_ts} {}\n", span.name());
+            let _ = file.write_all(line.as_bytes());
         });
     }
 }

@@ -36,11 +36,22 @@ fn basic() {
         assert!(fname.ends_with(".txt"), "{fname:?}");
         count += 1;
 
-        let contents = std::fs::read_to_string(path).unwrap();
-        assert!(contents.contains("spanned\n"), "{contents:?}");
-        assert!(contents.contains("info_span\n"), "{contents:?}");
-        assert!(!contents.contains("debug_span\n"), "{contents:?}");
-        assert!(contents.ends_with("\n"), "{contents:?}");
+        let contents = std::fs::read_to_string(&path).unwrap();
+        eprintln!("--- {fname:?} ---\n{contents}");
+
+        let mut lines = contents.lines();
+        let mut next = || lines.next().unwrap();
+        assert!(next().ends_with(" info_span"));
+        assert!(next().ends_with(" other_info_span"));
+        assert!(next().ends_with(" info_span"));
+        assert!(next().ends_with(" info_span"));
+        assert!(next().ends_with(" info_span"));
+        assert!(next().ends_with(" info_span"));
+        assert!(next().ends_with(" spanned"));
+        assert_eq!(lines.next(), None);
+        assert_eq!(contents.lines().count(), 7);
+
+        assert!(contents.ends_with("\n"));
     }
     assert_eq!(count, 2);
 }
@@ -48,6 +59,18 @@ fn basic() {
 #[tracing::instrument]
 fn spanned(arg: usize) {
     tracing::info!("arg: {}", arg);
-    tracing::info_span!("info_span").in_scope(|| {});
+    let sp = tracing::info_span!("info_span");
+    let other_sp = tracing::info_span!("other_info_span");
+    let other_sp_guard = other_sp.enter();
+    sp.in_scope(|| {
+        sp.in_scope(|| {}); // 1
+        let sp2 = sp.clone(); // Same ID
+        sp2.in_scope(|| {
+            drop(other_sp_guard); // 2; out of order exit
+            sp2.in_scope(|| {}); // 3
+        }); // 4
+    }); // 5
+    sp.in_scope(|| {}); // 6
+    drop(sp);
     tracing::debug_span!("debug_span").in_scope(|| {});
-}
+} // 7
